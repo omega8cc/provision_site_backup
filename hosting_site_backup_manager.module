@@ -227,20 +227,24 @@ function hosting_site_backup_manager_page($site) {
 
   $rows = array();
 
+  // Only allow actions when there's no backup delete or restore task running for this node
+  $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore'));
+
+  // TODO Make the table reload automatically
+  
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
   while ($object = db_fetch_object($result)) {
     $row = array();
     $row['description'] = filter_xss($object->description) . "<br />" . format_size($object->size) . " - " . format_date($object->timestamp, 'short');
 
     $actions = array();
-    // TODO Add checks to see if a task is already running for this backup/site and disable appropriate buttons
     // TODO Add check to see if the backup can be restored to the current platform?
     /* Add download button */
     $actions['download'] = _hosting_task_button(t('Get'), 'node/' . $site->nid . '/backup/download/' . $object->bid, t('Download the backup'), '', TRUE, FALSE, FALSE);
     /* Add delete button */
-    $actions['delete'] = _hosting_task_button(t('Delete'), 'node/' . $site->nid . '/backup/delete/' . $object->bid, t('Delete the backup'), '', TRUE, TRUE, FALSE);
+    $actions['delete'] = _hosting_task_button(t('Delete'), 'node/' . $site->nid . '/backup/delete/' . $object->bid, t('Delete the backup'), '', $buttonstatus, TRUE, FALSE);
     /* Add restore button */
-    $actions['restore'] = _hosting_task_button(t('Restore'), 'node/' . $site->nid . '/backup/restore/' . $object->bid, t('Restore the backup'), '', TRUE, TRUE, FALSE);
+    $actions['restore'] = _hosting_task_button(t('Restore'), 'node/' . $site->nid . '/backup/restore/' . $object->bid, t('Restore the backup'), '', $buttonstatus, TRUE, FALSE);
 
     $row['actions'] = array('data' => implode('', $actions), 'class' => 'hosting-actions');
 
