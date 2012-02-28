@@ -8,7 +8,7 @@ function hosting_site_backup_manager_menu() {
   $items = array();
 
   $items['node/%hosting_site_node/backups'] = array(
-  	'title' => 'Backups',
+    'title' => 'Backups',
     'description' => 'List of backups of this website',
     'page callback' => 'hosting_site_backup_manager_page',
     'page arguments' => array(1),
@@ -21,7 +21,7 @@ function hosting_site_backup_manager_menu() {
     'title' => 'Download backup',
     'description' => 'Download the selected backup',
     'page callback' => 'hosting_site_backup_manager_download',
-    'page arguments' => array(1,4),
+    'page arguments' => array(1, 4),
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
     'type' => MENU_CALLBACK,
@@ -31,7 +31,7 @@ function hosting_site_backup_manager_menu() {
     'title' => 'Delete backup',
     'description' => 'Delete the selected backup',
     'page callback' => 'hosting_site_backup_manager_delete',
-    'page arguments' => array(1,4),
+    'page arguments' => array(1, 4),
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
     'type' => MENU_CALLBACK,
@@ -41,7 +41,7 @@ function hosting_site_backup_manager_menu() {
     'title' => 'Restore backup',
     'description' => 'Restore the selected backup',
     'page callback' => 'hosting_site_backup_manager_restore',
-    'page arguments' => array(1,4),
+    'page arguments' => array(1, 4),
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
     'type' => MENU_CALLBACK,
@@ -55,7 +55,7 @@ function hosting_site_backup_manager_delete($site, $bid) {
   // Get the filename
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
 
-  if($source) {
+  if ($source) {
     // Return a confirmation form
     $output = drupal_get_form('hosting_site_backup_manager_confirm_delete', $source->filename, $site->nid, $bid);
   }
@@ -68,7 +68,7 @@ function hosting_site_backup_manager_delete($site, $bid) {
 function hosting_site_backup_manager_confirm_delete($form_state, $filename, $sitenid, $bid) {
 
   // Add the hosting_task javascript, so we can use the confirm form functionality
-  drupal_add_js(drupal_get_path('module','hosting_task') . '/hosting_task.js');
+  drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
 
   // Get the backup data
   $source = db_fetch_object(db_query("SELECT * FROM {hosting_site_backups} WHERE site=%d AND bid=%d", $sitenid, $bid));
@@ -83,7 +83,7 @@ function hosting_site_backup_manager_confirm_delete($form_state, $filename, $sit
   // Not the best formatted code, but suffices for now
   $form['explanation'] = array(
     '#type' => 'markup',
-    '#value' => '<h2>'.t('Backup information').'</h2>' . t('Backup description:<br /> %description', array('%description' => filter_xss($source->description))) . '<br />',
+    '#value' => '<h2>' . t('Backup information') . '</h2>' . t('Backup description:<br /> %description', array('%description' => filter_xss($source->description))) . '<br />',
     '#weight' => -10,
   );
 
@@ -117,7 +117,7 @@ function hosting_site_backup_manager_confirm_delete_submit($form, &$form_state) 
   $filename = $form['#filename'];
   $sitenid = $form['#sitenid'];
   $bid = $form['#bid'];
-  hosting_add_task($sitenid, 'backup_delete',array($bid => $filename));
+  hosting_add_task($sitenid, 'backup_delete', array($bid => $filename));
   $form_state['redirect'] = 'node/' . $sitenid . '/backup';
   modalframe_close_dialog();
 }
@@ -132,7 +132,7 @@ function hosting_site_backup_manager_restore($site, $bid) {
 
 function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid) {
   // Add the hosting_task javascript, so we can use the confirm form functionality
-  drupal_add_js(drupal_get_path('module','hosting_task') . '/hosting_task.js');
+  drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
 
   // Build the form
   $form = array();
@@ -146,7 +146,7 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
   // Not the best formatted code, but suffices for now
   $form['explanation'] = array(
     '#type' => 'markup',
-    '#value' => '<h2>'.t('Backup information').'</h2>' . t('Backup description:<br /> %description', array('%description' => filter_xss($source->description))) . '<br />',
+    '#value' => '<h2>' . t('Backup information') . '</h2>' . t('Backup description:<br /> %description', array('%description' => filter_xss($source->description))) . '<br />',
     '#weight' => -10,
   );
 
@@ -178,7 +178,7 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
   // The restoration has been confirmed, process the result
   $sitenid = $form['#sitenid'];
   $bid = $form['#bid'];
-  hosting_add_task($sitenid, 'restore',array('bid' => $bid));
+  hosting_add_task($sitenid, 'restore', array('bid' => $bid));
   $form_state['redirect'] = 'node/' . $sitenid . '/backup';
   modalframe_close_dialog();
 
@@ -188,7 +188,7 @@ function hosting_site_backup_manager_download($site, $bid) {
 
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
 
-  if($source) {
+  if ($source) {
     if ($fd = fopen($source->filename, 'rb')) {
 
       // Construct filename
@@ -236,11 +236,11 @@ function hosting_site_backup_manager_page($site) {
     // TODO Add checks to see if a task is already running for this backup/site and disable appropriate buttons
     // TODO Add check to see if the backup can be restored to the current platform?
     /* Add download button */
-    $actions['download'] = _hosting_task_button(t('Get'), 'node/'.$site->nid.'/backup/download/'.$object->bid, t('Download the backup'), '', TRUE, FALSE, FALSE);
+    $actions['download'] = _hosting_task_button(t('Get'), 'node/' . $site->nid . '/backup/download/' . $object->bid, t('Download the backup'), '', TRUE, FALSE, FALSE);
     /* Add delete button */
-    $actions['delete'] = _hosting_task_button(t('Delete'), 'node/'.$site->nid.'/backup/delete/'.$object->bid, t('Delete the backup'), '', TRUE, TRUE, FALSE);
+    $actions['delete'] = _hosting_task_button(t('Delete'), 'node/' . $site->nid . '/backup/delete/' . $object->bid, t('Delete the backup'), '', TRUE, TRUE, FALSE);
     /* Add restore button */
-    $actions['restore'] = _hosting_task_button(t('Restore'), 'node/'.$site->nid.'/backup/restore/'.$object->bid, t('Restore the backup'), '', TRUE, TRUE, FALSE);
+    $actions['restore'] = _hosting_task_button(t('Restore'), 'node/' . $site->nid . '/backup/restore/' . $object->bid, t('Restore the backup'), '', TRUE, TRUE, FALSE);
 
     $row['actions'] = array('data' => implode('', $actions), 'class' => 'hosting-actions');
 
