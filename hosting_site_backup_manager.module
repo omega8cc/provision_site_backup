@@ -1,4 +1,12 @@
 <?php
+
+/**
+* @file
+*   Hosting site backup manager module.
+*
+* Adds a backup tab to the site node.
+*/
+
 /**
  * Implementation of hook_menu().
  *
