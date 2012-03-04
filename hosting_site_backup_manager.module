@@ -10,8 +10,8 @@
 /**
  * Implements of hook_menu().
  *
- * @return 
- * An array of menu items.
+ * @return
+ *   An array of menu items.
  */
 function hosting_site_backup_manager_menu() {
   $items = array();
@@ -66,17 +66,17 @@ function hosting_site_backup_manager_menu() {
  * @param node $site
  *   The site node object.
  * @param int $bid
- *   The backup id. 
+ *   The backup id.
  *
  * @return
  *   A confirmation form or a error string.
  */
 function hosting_site_backup_manager_delete($site, $bid) {
-  // Get the filename
+  // Get the filename.
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
 
   if ($source) {
-    // Return a confirmation form
+    // Return a confirmation form.
     $output = drupal_get_form('hosting_site_backup_manager_confirm_delete', $source->filename, $site->nid, $bid);
   }
   else {
@@ -86,7 +86,7 @@ function hosting_site_backup_manager_delete($site, $bid) {
 }
 
 /**
- * Function that renders a confirmation form for the selected deletetion
+ * Function that renders a confirmation form for the selected deletetion.
  *
  * @param $form_state
  *   The form state array. Changes made to this variable will have no effect.
@@ -95,17 +95,18 @@ function hosting_site_backup_manager_delete($site, $bid) {
  * @param $sitenid
  *   The selected site node id.
  * @param $bid
- *   The backup id
+ *   The backup id.
  *
  * @return
  *   A confirmation form.
  */
 function hosting_site_backup_manager_confirm_delete($form_state, $filename, $sitenid, $bid) {
 
-  // Add the hosting_task javascript, so we can use the confirm form functionality
+  // Add the hosting_task javascript, 
+  // so we can use the confirm form functionality.
   drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
 
-  // Get the backup data
+  // Get the backup data.
   $source = db_fetch_object(db_query("SELECT * FROM {hosting_site_backups} WHERE site=%d AND bid=%d", $sitenid, $bid));
 
 
@@ -140,7 +141,8 @@ function hosting_site_backup_manager_confirm_delete($form_state, $filename, $sit
       'hosting_site_backup_manager_confirm_delete');
 
   // Copied from hosting_task.module
-  // add an extra class to the actions to allow us to disable the cancel link via javascript for the modal dialog
+  // Add an extra class to the actions to allow us to disable 
+  // the cancel link via javascript for the modal dialog
   $form['actions']['#prefix'] = '<div id="hosting-task-confirm-form-actions" class="container-inline">';
 
   return $form;
@@ -167,7 +169,7 @@ function hosting_site_backup_manager_confirm_delete_submit($form, &$form_state) 
  * Placeholder  function for additional restore checks.
  *
  * @param $site
- *   The site node object
+ *   The site node object.
  * @param $bid
  *   The backup id.
  *
@@ -182,7 +184,7 @@ function hosting_site_backup_manager_restore($site, $bid) {
 }
 
 /**
- * Function that renders a confirmation form for the selected deletetion
+ * Function that renders a confirmation form for the selected deletetion.
  *
  * @param $form_state
  *   The form state array. Changes made to this variable will have no effect.
@@ -256,7 +258,7 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
  * Function to download a backup file.
  *
  * @param $site
- *   The site node object
+ *   The site node object.
  * @param $bid
  *   The backup id.
  *
@@ -315,7 +317,6 @@ function hosting_site_backup_manager_page($site) {
   $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore'));
 
   // TODO Make the table reload automatically
-
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
   while ($object = db_fetch_object($result)) {
     $row = array();
