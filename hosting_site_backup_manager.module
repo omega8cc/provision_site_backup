@@ -235,7 +235,8 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
         'hosting_site_backup_manager_confirm_restore');
 
   // Copied from hosting_task.module
-  // add an extra class to the actions to allow us to disable the cancel link via javascript for the modal dialog.
+  // add an extra class to the actions to allow us to
+  // disable the cancel link via javascript for the modal dialog.
   $form['actions']['#prefix'] = '<div id="hosting-task-confirm-form-actions" class="container-inline">';
   return $form;
 }
@@ -313,7 +314,8 @@ function hosting_site_backup_manager_page($site) {
 
   $rows = array();
 
-  // Only allow actions when there's no backup delete or restore task running for this node.
+  // Only allow actions when there's no backup delete or
+  // restore task running for this node.
   $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore'));
 
   // TODO Make the table reload automatically.
@@ -323,7 +325,7 @@ function hosting_site_backup_manager_page($site) {
     $row['description'] = filter_xss($object->description) . "<br />" . format_size($object->size) . " - " . format_date($object->timestamp, 'short');
 
     $actions = array();
-    // @todo: Add check to see if the backup can be restored to the current platform?
+    // @todo: Add check if the backup can be restored to current platform?
     /* Add download button */
     $actions['download'] = _hosting_task_button(t('Get'), 'node/' . $site->nid . '/backup/download/' . $object->bid, t('Download the backup'), '', TRUE, FALSE, FALSE);
     /* Add delete button */
