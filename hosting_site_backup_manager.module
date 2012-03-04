@@ -53,12 +53,12 @@ function hosting_site_backup_manager_menu() {
 
 /**
  * Placeholder function for additional delete checks.
- * 
+ *
  * @param $site
  * The site node object
  * @param $bid
  * The backup id. 
- * 
+ *
  * @return
  *   A confirmation form or a error string.
  */
@@ -78,7 +78,7 @@ function hosting_site_backup_manager_delete($site, $bid) {
 
 /**
  * Function that renders a confirmation form for the selected deletetion
- * 
+ *
  * @param $form_state
  * The form state array. Changes made to this variable will have no effect.
  * @param $filename
@@ -87,7 +87,7 @@ function hosting_site_backup_manager_delete($site, $bid) {
  * The selected site node id.
  * @param $bid
  *  The backup id
- * 
+ *
  * @return
  *   A confirmation form.
  */
@@ -124,7 +124,7 @@ function hosting_site_backup_manager_confirm_delete($form_state, $filename, $sit
   $form = confirm_form(
   $form,
   t('Are you sure you want to delete this backup?', array()),
-      'node/' . $sitenid . '/backup', 
+      'node/' . $sitenid . '/backup',
   t('This action cannot be undone.'),
   t('Delete'),
   t('Cancel'),
@@ -138,30 +138,30 @@ function hosting_site_backup_manager_confirm_delete($form_state, $filename, $sit
 }
 
 /**
- * The form submit function. 
- **/
+ * The form submit function.
+ */
 function hosting_site_backup_manager_confirm_delete_submit($form, &$form_state) {
 
   // The deletion has been confirmed, process the result
   $filename = $form['#filename'];
   $sitenid = $form['#sitenid'];
   $bid = $form['#bid'];
-  
-  //Add the hosting task.  
+
+  //Add the hosting task.
   hosting_add_task($sitenid, 'backup_delete', array($bid => $filename));
-  
+
   $form_state['redirect'] = 'node/' . $sitenid . '/backup';
   modalframe_close_dialog();
 }
 
 /**
  * Placeholder  function for additional restore checks.
- * 
+ *
  * @param $site
  * The site node object
  * @param $bid
- * The backup id. 
- * 
+ * The backup id.
+ *
  * @return
  *   A confirmation form.
  */
@@ -174,7 +174,7 @@ function hosting_site_backup_manager_restore($site, $bid) {
 
 /**
  * Function that renders a confirmation form for the selected deletetion
- * 
+ *
  * @param $form_state
  * The form state array. Changes made to this variable will have no effect.
  * @param $filename
@@ -183,7 +183,7 @@ function hosting_site_backup_manager_restore($site, $bid) {
  * The selected site node id.
  * @param $bid
  *  The backup id
- * 
+ *
  * @return
  *   A confirmation form.
  */
@@ -218,7 +218,7 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
   $form = confirm_form(
   $form,
   t('Are you sure you want to restore this backup?', array()),
-        'node/' . $sitenid . '/backup', 
+        'node/' . $sitenid . '/backup',
   t('This action cannot be undone.'),
   t('Restore'),
   t('Cancel'),
@@ -231,8 +231,8 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
 }
 
 /**
- * The form submit function. 
- **/
+ * The form submit function.
+ */
 function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state) {
   // The restoration has been confirmed, process the result
   $sitenid = $form['#sitenid'];
@@ -245,12 +245,12 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
 
 /**
  * Function to download a backup file.
- * 
+ *
  * @param $site
  * The site node object
  * @param $bid
- * The backup id. 
- * 
+ * The backup id.
+ *
  * @return
  *   A file or a 404 page.
  */
@@ -288,12 +288,12 @@ function hosting_site_backup_manager_download($site, $bid) {
 
 /**
  * Show a list of backups for a website
- * 
+ *
  * @param $site
  * The site node.
  * @return
  *  A theme table wit a list of backups.
-**/
+ */
 function hosting_site_backup_manager_page($site) {
   $output = "";
 
@@ -306,7 +306,7 @@ function hosting_site_backup_manager_page($site) {
   $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore'));
 
   // TODO Make the table reload automatically
-  
+
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
   while ($object = db_fetch_object($result)) {
     $row = array();
