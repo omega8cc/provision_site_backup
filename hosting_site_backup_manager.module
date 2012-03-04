@@ -1,7 +1,7 @@
 <?php
 /**
- * Implementation of hook_menu().
- *
+ * Implements of hook_menu().
+ * 
  * @return An array of menu items.
  */
 function hosting_site_backup_manager_menu() {
@@ -55,9 +55,9 @@ function hosting_site_backup_manager_menu() {
  * Placeholder function for additional delete checks.
  *
  * @param $site
- * The site node object
+ *   The site node object.
  * @param $bid
- * The backup id. 
+ *   The backup id. 
  *
  * @return
  *   A confirmation form or a error string.
@@ -80,13 +80,13 @@ function hosting_site_backup_manager_delete($site, $bid) {
  * Function that renders a confirmation form for the selected deletetion
  *
  * @param $form_state
- * The form state array. Changes made to this variable will have no effect.
+ *   The form state array. Changes made to this variable will have no effect.
  * @param $filename
- * The backup filename to delete.
+ *   The backup filename to delete.
  * @param $sitenid
- * The selected site node id.
+ *   The selected site node id.
  * @param $bid
- *  The backup id
+ *   The backup id
  *
  * @return
  *   A confirmation form.
@@ -158,9 +158,9 @@ function hosting_site_backup_manager_confirm_delete_submit($form, &$form_state) 
  * Placeholder  function for additional restore checks.
  *
  * @param $site
- * The site node object
+ *   The site node object
  * @param $bid
- * The backup id.
+ *   The backup id.
  *
  * @return
  *   A confirmation form.
@@ -176,13 +176,13 @@ function hosting_site_backup_manager_restore($site, $bid) {
  * Function that renders a confirmation form for the selected deletetion
  *
  * @param $form_state
- * The form state array. Changes made to this variable will have no effect.
+ *   The form state array. Changes made to this variable will have no effect.
  * @param $filename
- * The backup filename to delete.
+ *   The backup filename to delete.
  * @param $sitenid
- * The selected site node id.
+ *   The selected site node id.
  * @param $bid
- *  The backup id
+ *   The backup id
  *
  * @return
  *   A confirmation form.
@@ -247,9 +247,9 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
  * Function to download a backup file.
  *
  * @param $site
- * The site node object
+ *   The site node object
  * @param $bid
- * The backup id.
+ *   The backup id.
  *
  * @return
  *   A file or a 404 page.
@@ -290,9 +290,9 @@ function hosting_site_backup_manager_download($site, $bid) {
  * Show a list of backups for a website
  *
  * @param $site
- * The site node.
+ *   The site node.
  * @return
- *  A theme table wit a list of backups.
+ *   A theme table wit a list of backups.
  */
 function hosting_site_backup_manager_page($site) {
   $output = "";
