@@ -197,7 +197,8 @@ function hosting_site_backup_manager_restore($site, $bid) {
  *   A confirmation form.
  */
 function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid) {
-  // Add the hosting_task javascript, so we can use the confirm form functionality
+  // Add the hosting_task javascript,
+  // so we can use the confirm form functionality.
   drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
 
   // Build the form
@@ -205,11 +206,11 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
   $form['#sitenid'] = $sitenid;
   $form['#bid'] = $bid;
 
-  // Get the backup data
+  // Get the backup data.
   $source = db_fetch_object(db_query("SELECT * FROM {hosting_site_backups} WHERE site=%d AND bid=%d", $sitenid, $bid));
 
 
-  // Not the best formatted code, but suffices for now
+  // Not the best formatted code, but suffices for now.
   $form['explanation'] = array(
     '#type' => 'markup',
     '#value' => '<h2>' . t('Backup information') . '</h2>' . t('Backup description:<br /> %description', array('%description' => filter_xss($source->description))) . '<br />',
@@ -223,7 +224,7 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
   );
 
 
-  // Build the confirmation form
+  // Build the confirmation form.
   $form = confirm_form(
   $form,
   t('Are you sure you want to restore this backup?', array()),
@@ -234,7 +235,7 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
         'hosting_site_backup_manager_confirm_restore');
 
   // Copied from hosting_task.module
-  // add an extra class to the actions to allow us to disable the cancel link via javascript for the modal dialog
+  // add an extra class to the actions to allow us to disable the cancel link via javascript for the modal dialog.
   $form['actions']['#prefix'] = '<div id="hosting-task-confirm-form-actions" class="container-inline">';
   return $form;
 }
@@ -243,7 +244,7 @@ function hosting_site_backup_manager_confirm_restore($form_state, $sitenid, $bid
  * The form submit function.
  */
 function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state) {
-  // The restoration has been confirmed, process the result
+  // The restoration has been confirmed, process the result.
   $sitenid = $form['#sitenid'];
   $bid = $form['#bid'];
   hosting_add_task($sitenid, 'restore', array('bid' => $bid));
@@ -270,10 +271,10 @@ function hosting_site_backup_manager_download($site, $bid) {
   if ($source) {
     if ($fd = fopen($source->filename, 'rb')) {
 
-      // Construct filename
+      // Construct filename.
       $filename = basename($source->filename);
 
-      // Set headers
+      // Set headers.
       header("Cache-Control: public");
       header("Content-Description: File Transfer");
       header("Content-Disposition: attachment; filename=$filename");
@@ -311,7 +312,7 @@ function hosting_site_backup_manager_page($site) {
 
   $rows = array();
 
-  // Only allow actions when there's no backup delete or restore task running for this node
+  // Only allow actions when there's no backup delete or restore task running for this node.
   $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore'));
 
   // TODO Make the table reload automatically
