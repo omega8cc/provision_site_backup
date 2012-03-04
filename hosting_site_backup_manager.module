@@ -1,16 +1,17 @@
 <?php
 
 /**
-* @file
-*   Hosting site backup manager module.
-*
-* Adds a backup tab to the site node.
-*/
+ * @file
+ * Hosting site backup manager module.
+ *
+ * Adds a backup tab to the site node.
+ */
 
 /**
  * Implements of hook_menu().
- * 
- * @return An array of menu items.
+ *
+ * @return 
+ * An array of menu items.
  */
 function hosting_site_backup_manager_menu() {
   $items = array();
@@ -62,9 +63,9 @@ function hosting_site_backup_manager_menu() {
 /**
  * Placeholder function for additional delete checks.
  *
- * @param $site
+ * @param node $site
  *   The site node object.
- * @param $bid
+ * @param int $bid
  *   The backup id. 
  *
  * @return
