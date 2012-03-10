@@ -56,6 +56,16 @@ function hosting_site_backup_manager_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['node/%hosting_site_node/backup/export/%'] = array(
+    'title' => 'Export backup',
+    'description' => 'Export the selected backup',
+    'page callback' => 'hosting_site_backup_manager_export',
+    'page arguments' => array(1, 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 1),
+    'type' => MENU_CALLBACK,
+  );
+  
 
   return $items;
 }
@@ -255,6 +265,17 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
 }
 
 /**
+* The form submit function.
+*/
+function hosting_site_backup_manager_export($sitenid, $bid) {
+  // Get the filename.
+  $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
+  
+  hosting_add_task($sitenid, 'export_backup', array('backup' => $source->filename));
+}
+
+
+/**
  * Function to download a backup file.
  *
  * @param node $site
@@ -342,6 +363,9 @@ function hosting_site_backup_manager_page($site) {
     // @todo: Add check if the backup can be restored to current platform?
     /* Add download button */
     $actions['download'] = _hosting_task_button(t('Get'), 'node/' . $site->nid . '/backup/download/' . $object->bid, t('Download the backup'), '', TRUE, FALSE, FALSE);
+    /* Add export backup button */
+    $actions['export_backup'] = _hosting_task_button(t('Export'), 'node/' . $site->nid . '/backup/export/' . $object->bid, t('Make the backup exportable'), '', $buttonstatus, FALSE, FALSE);
+    
     /* Add delete button */
     $actions['delete'] = _hosting_task_button(t('Delete'), 'node/' . $site->nid . '/backup/delete/' . $object->bid, t('Delete the backup'), '', $buttonstatus, TRUE, FALSE);
     /* Add restore button */
@@ -362,3 +386,14 @@ function hosting_site_backup_manager_page($site) {
   return $output;
 }
 
+function hosting_site_backup_manager_hosting_tasks() {
+  $tasks = array();
+
+  $tasks['site']['export_backup'] = array(
+    'title' => t('Export Backup'),
+    'description' => t('Make a backup available for download.'),
+    'dialog' => TRUE
+  );
+
+  return $tasks;
+}
