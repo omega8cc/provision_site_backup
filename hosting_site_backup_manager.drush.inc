@@ -19,6 +19,8 @@ function hosting_site_backup_manager_drush_command() {
       'backup' => dt('The complete filepath of the backup to export.'),
     ),
   );
+  
+  return $items;
 }
 
 /**
