@@ -48,7 +48,7 @@ function drush_hosting_site_backup_manager_provision_export_backup($backup) {
   // Path for client exported backups
   $clientbackupdir = $backupdir . '/' . d()->client_name;
   if(!is_dir($clientbackupdir)) {
-    provision_file()->create_dir($clientbackupdir, dt('General backup export directory '), 0751);
+    provision_file()->create_dir($clientbackupdir, dt('Client backup export directory '), 0751);
   }
   
   if (drush_shell_cd_and_exec($clientbackupdir, 'ln %s .', $backup)) {
