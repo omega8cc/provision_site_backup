@@ -272,7 +272,7 @@ function hosting_site_backup_manager_export($site, $bid) {
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
   
   // Start the task.
-  hosting_add_task($sitenid, 'export_backup', array('backup' => $source->filename));
+  hosting_add_task($site->nid, 'export_backup', array('backup' => $source->filename));
   
   // Redirect to the backups page.
   drupal_goto('node/'. $site->nid .'/backups');
