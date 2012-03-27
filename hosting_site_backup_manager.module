@@ -267,7 +267,7 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
 /**
 * The form submit function.
 */
-function hosting_site_backup_manager_export($sitenid, $bid) {
+function hosting_site_backup_manager_export($site, $bid) {
   // Get the filename.
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
   
@@ -275,7 +275,7 @@ function hosting_site_backup_manager_export($sitenid, $bid) {
   hosting_add_task($sitenid, 'export_backup', array('backup' => $source->filename));
   
   // Redirect to the backups page.
-  drupal_goto('node/'. $sitenid .'/backups');
+  drupal_goto('node/'. $site->nid .'/backups');
 }
 
 
