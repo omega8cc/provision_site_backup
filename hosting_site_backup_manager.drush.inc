@@ -20,6 +20,14 @@ function hosting_site_backup_manager_drush_command() {
     ),
   );
   
+  $items['provision-remove_export_backup'] = array(
+      'description' => 'Make an exported site backup unavailable for download.',
+      'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
+      'arguments' => array(
+        'export' => dt('The complete filepath of the exported backup to remove.'),
+  ),
+  );
+  
   return $items;
 }
 
@@ -33,6 +41,12 @@ function drush_hosting_site_backup_manager_pre_hosting_task($task) {
   if ($task->task_type == 'export_backup') {
     $task->args[1] = $task->task_args['backup'];
   }
+  
+  // Pass the task arguments to the drush provision script
+  if ($task->task_type == 'remove_export_backup') {
+    $task->args[1] = $task->task_args['export'];
+  }
+  
 }
 
 /**
@@ -63,3 +77,24 @@ function drush_hosting_site_backup_manager_provision_export_backup($backup) {
   
 }
 
+/**
+* Implements the provision-remove_export_backup command
+*/
+function drush_hosting_site_backup_manager_provision_remove_export_backup($export) {
+  drush_log(dt('Start remove export backup command'), 'ok');
+
+  // Path for exported backups
+  $backupdir = d()->platform->server->aegir_root . '/backup-exports';
+
+  // Path for client exported backups
+  $clientbackupdir = $backupdir . '/' . d()->client_name;
+
+  if (drush_shell_cd_and_exec($clientbackupdir, 'rm %s', $export)) {
+    drush_log(dt('Backup export removed', array()), 'ok');
+  }
+  else {
+    // The command failed
+    return drush_set_error('DRUSH_PROVISION_REMOVE_EXPORT_BACKUP_FAILED', dt("Drush was unable to remove the export of the backup.\nThe specific errors are below:\n!errors", array('!path' => $clientbackupdir, '!errors' => implode("\n", drush_shell_exec_output()))));
+  }
+
+}
