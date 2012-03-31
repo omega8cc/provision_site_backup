@@ -26,6 +26,16 @@ function hosting_site_backup_manager_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
+  $items['node/%hosting_site_node/ajax/backups'] = array(
+    'title' => t('Backup list'),
+    'description' => t('AJAX callback for refreshing backups list'),
+    'page callback' => 'hosting_site_backup_manager_ajax_list',
+    'page arguments' => array(1),
+    'access callback' => 'node_access',
+    'access arguments' => array('view', 1),
+    'type' => MENU_CALLBACK, 
+  );
+  
   $items['node/%hosting_site_node/backup/download/%'] = array(
     'title' => 'Download backup',
     'description' => 'Download the selected backup',
@@ -344,53 +354,73 @@ function hosting_site_backup_manager_download($site, $bid) {
  *   A theme table with a list of backups.
  */
 function hosting_site_backup_manager_page($site) {
-  $output = "";
+  // Add the js
+  drupal_add_js(drupal_get_path('module', 'hosting_site_backup_manager') . '/hosting_site_backup_manager.js');
+  $settings['hostingSiteBackupManager'] = array(
+    'nid' => $site->nid,
+  );
+  drupal_add_js($settings, 'setting');
   
+  $output = '<div id="hosting-site-backup-manager-backupstable">';
   
+  $output .= hosting_site_backup_manager_backups_table($site);
+  
+  $output .= '</div>';
+  
+  return $output;
+}
+
+function hosting_site_backup_manager_ajax_list($site) {
+  $return['markup'] = hosting_site_backup_manager_backups_table($site);
+  drupal_json($return);
+  exit();
+}
+
+function hosting_site_backup_manager_backups_table($site) {
   // Determine client name.
   $client = hosting_client_node_load($site->client);
   
   $headers[] = t('Backup');
   $headers[] = array('data' => t('Actions'), 'class' => 'hosting-actions');
-
+  
   $rows = array();
-
+  
   // Only allow actions when there's no backup delete or
   // restore task running for this node.
   $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore') || hosting_task_outstanding($site->nid, 'export_backup') || hosting_task_outstanding($site->nid, 'remove_export_backup'));
-
+  
   // TODO Make the table reload automatically.
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
   while ($object = db_fetch_object($result)) {
     $row = array();
     $row['description'] = filter_xss($object->description) . "<br />" . format_size($object->size) . " - " . format_date($object->timestamp, 'short');
-
+  
     $actions = array();
     // @todo: Add check if the backup can be restored to current platform?
     /* Add download button */
     $downloadstatus = (_hosting_site_backup_manager_isfileavailable($site, $object->bid) && !hosting_task_outstanding($site->nid, 'remove_export_backup'));
     $actions['download'] = _hosting_task_button(t('Get'), 'node/' . $site->nid . '/backup/download/' . $object->bid, t('Download the backup'), '', $downloadstatus, FALSE, FALSE);
-    
+  
     /* Add export backup button */
     $exportstatus = ($buttonstatus && !$downloadstatus);
     $actions['export_backup'] = _hosting_task_button(t('Export'), 'node/' . $site->nid . '/backup/export/' . $object->bid, t('Make the backup exportable'), '', $exportstatus, FALSE, FALSE);
-    
+  
     /* Add delete button */
     $actions['delete'] = _hosting_task_button(t('Delete'), 'node/' . $site->nid . '/backup/delete/' . $object->bid, t('Delete the backup'), '', $buttonstatus, TRUE, FALSE);
     /* Add restore button */
     $actions['restore'] = _hosting_task_button(t('Restore'), 'node/' . $site->nid . '/backup/restore/' . $object->bid, t('Restore the backup'), '', $buttonstatus, TRUE, FALSE);
-
+  
     $row['actions'] = array(
-      'data' => implode('', $actions),
-      'class' => 'hosting-actions',
+        'data' => implode('', $actions),
+        'class' => 'hosting-actions',
     );
-
+  
     $rows[] = array(
-      'data' => $row,
-      'class' => $info['class'],
+        'data' => $row,
+        'class' => $info['class'],
     );
   }
-
+  
   $output .= theme('table', $headers, $rows, array('class' => 'hosting-table'));
   return $output;
 }
