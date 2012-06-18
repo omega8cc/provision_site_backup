@@ -27,15 +27,15 @@ function hosting_site_backup_manager_menu() {
   );
 
   $items['node/%hosting_site_node/ajax/backups'] = array(
-    'title' => t('Backup list'),
-    'description' => t('AJAX callback for refreshing backups list'),
+    'title' => 'Backup list',
+    'description' => 'AJAX callback for refreshing backups list',
     'page callback' => 'hosting_site_backup_manager_ajax_list',
     'page arguments' => array(1),
     'access callback' => 'node_access',
     'access arguments' => array('view', 1),
-    'type' => MENU_CALLBACK, 
+    'type' => MENU_CALLBACK,
   );
-  
+
   $items['node/%hosting_site_node/backup/download/%'] = array(
     'title' => 'Download backup',
     'description' => 'Download the selected backup',
@@ -75,7 +75,7 @@ function hosting_site_backup_manager_menu() {
     'access arguments' => array('view', 1),
     'type' => MENU_CALLBACK,
   );
-  
+
 
   return $items;
 }
@@ -207,7 +207,7 @@ function hosting_site_backup_manager_restore($site, $bid) {
  * Function that renders a confirmation form for the selected deletetion.
  *
  * @param array $form_state
- *  The form state array. Changes made to this variable will have no effect.
+ *   The form state array. Changes made to this variable will have no effect.
  * @param int $sitenid
  *   The selected site node id.
  * @param int $bid
@@ -275,17 +275,17 @@ function hosting_site_backup_manager_confirm_restore_submit($form, &$form_state)
 }
 
 /**
-* The form submit function.
-*/
+ * The form submit function.
+ */
 function hosting_site_backup_manager_export($site, $bid) {
   // Get the filename.
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
-  
+
   // Start the task.
   hosting_add_task($site->nid, 'export_backup', array('backup' => $source->filename));
-  
+
   // Redirect to the backups page.
-  drupal_goto('node/'. $site->nid .'/backups');
+  drupal_goto('node/' . $site->nid . '/backups');
 }
 
 
@@ -303,16 +303,14 @@ function hosting_site_backup_manager_export($site, $bid) {
 function hosting_site_backup_manager_download($site, $bid) {
   // @todo: check if the bid is not in a task.
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
-  
+
   if ($source) {
     // Determine client name.
     $client = hosting_client_node_load($site->client);
 
     // Get Document Root.
     $docroot = _hosting_site_backup_manager_getaegirroot();
-    
-    
-    $symlink = $docroot .'/backup-exports/'. $client->uname .'/'. basename($source->filename);
+
 
     if ($fd = fopen($symlink, 'rb')) {
 
@@ -322,7 +320,7 @@ function hosting_site_backup_manager_download($site, $bid) {
       // Set headers.
       header("Cache-Control: public");
       header("Content-Description: File Transfer");
-      header("Content-Disposition: attachment; filename=$filename");
+      header("Content-Disposition: attachment; filename=\"$filename\"");
       header("Content-Type: application/octet-stream");
       header("Content-Transfer-Encoding: binary");
 
@@ -332,7 +330,7 @@ function hosting_site_backup_manager_download($site, $bid) {
       fclose($fd);
       // File downloaded so delete the file.
       // Start the task.
-      hosting_add_task($site->nid, 'remove_export_backup', array('export' => $symlink));      
+      hosting_add_task($site->nid, 'remove_export_backup', array('export' => $symlink));
       exit();
     }
     else {
@@ -345,7 +343,7 @@ function hosting_site_backup_manager_download($site, $bid) {
 }
 
 /**
- * Show a list of backups for a website
+ * Show a list of backups for a website.
  *
  * @param node $site
  *   The site node.
@@ -354,77 +352,87 @@ function hosting_site_backup_manager_download($site, $bid) {
  *   A theme table with a list of backups.
  */
 function hosting_site_backup_manager_page($site) {
-  // Add the js
+  // Add the js.
   drupal_add_js(drupal_get_path('module', 'hosting_site_backup_manager') . '/hosting_site_backup_manager.js');
+
   $settings['hostingSiteBackupManager'] = array(
     'nid' => $site->nid,
   );
   drupal_add_js($settings, 'setting');
-  
+
   $output = '<div id="hosting-site-backup-manager-backupstable">';
-  
+
   $output .= hosting_site_backup_manager_backups_table($site);
-  
+
   $output .= '</div>';
-  
+
   return $output;
 }
 
+/**
+ * Page callback for backups table via AJAX.
+ */
 function hosting_site_backup_manager_ajax_list($site) {
   $return['markup'] = hosting_site_backup_manager_backups_table($site);
   drupal_json($return);
   exit();
 }
 
+/**
+ * Prepare a table of available backups.
+ */
 function hosting_site_backup_manager_backups_table($site) {
   // Determine client name.
   $client = hosting_client_node_load($site->client);
-  
+
   $headers[] = t('Backup');
   $headers[] = array('data' => t('Actions'), 'class' => 'hosting-actions');
-  
+
   $rows = array();
-  
+
   // Only allow actions when there's no backup delete or
   // restore task running for this node.
   $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore') || hosting_task_outstanding($site->nid, 'export_backup') || hosting_task_outstanding($site->nid, 'remove_export_backup'));
-  
+
   // TODO Make the table reload automatically.
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
   while ($object = db_fetch_object($result)) {
     $row = array();
     $row['description'] = filter_xss($object->description) . "<br />" . format_size($object->size) . " - " . format_date($object->timestamp, 'short');
-  
+
     $actions = array();
     // @todo: Add check if the backup can be restored to current platform?
     /* Add download button */
     $downloadstatus = (_hosting_site_backup_manager_isfileavailable($site, $object->bid) && !hosting_task_outstanding($site->nid, 'remove_export_backup'));
     $actions['download'] = _hosting_task_button(t('Get'), 'node/' . $site->nid . '/backup/download/' . $object->bid, t('Download the backup'), '', $downloadstatus, FALSE, FALSE);
-  
+
     /* Add export backup button */
     $exportstatus = ($buttonstatus && !$downloadstatus);
     $actions['export_backup'] = _hosting_task_button(t('Export'), 'node/' . $site->nid . '/backup/export/' . $object->bid, t('Make the backup exportable'), '', $exportstatus, FALSE, FALSE);
-  
+
     /* Add delete button */
     $actions['delete'] = _hosting_task_button(t('Delete'), 'node/' . $site->nid . '/backup/delete/' . $object->bid, t('Delete the backup'), '', $buttonstatus, TRUE, FALSE);
     /* Add restore button */
     $actions['restore'] = _hosting_task_button(t('Restore'), 'node/' . $site->nid . '/backup/restore/' . $object->bid, t('Restore the backup'), '', $buttonstatus, TRUE, FALSE);
-  
+
     $row['actions'] = array(
-        'data' => implode('', $actions),
-        'class' => 'hosting-actions',
+      'data' => implode('', $actions),
+      'class' => 'hosting-actions',
     );
-  
+
     $rows[] = array(
-        'data' => $row,
-        'class' => $info['class'],
+      'data' => $row,
+      'class' => $info['class'],
     );
   }
-  
+
   $output .= theme('table', $headers, $rows, array('class' => 'hosting-table'));
   return $output;
 }
 
+/**
+ * Implements hook_hosting_tasks().
+ */
 function hosting_site_backup_manager_hosting_tasks() {
   $tasks = array();
 
@@ -434,43 +442,49 @@ function hosting_site_backup_manager_hosting_tasks() {
     'dialog' => TRUE,
     'hidden' => TRUE,
   );
-  
+
   $tasks['site']['remove_export_backup'] = array(
-      'title' => t('Remove Export Backup'),
-      'description' => t('Remove an exported backup, making it unavailable for download.'),
-      'dialog' => FALSE,
-      'hidden' => TRUE,
+    'title' => t('Remove Export Backup'),
+    'description' => t('Remove an exported backup, making it unavailable for download.'),
+    'dialog' => FALSE,
+    'hidden' => TRUE,
   );
-  
+
 
   return $tasks;
 }
 
+/**
+ * Helper function to get the Aegir root directory.
+ */
 function _hosting_site_backup_manager_getaegirroot() {
   // TODO: Make it a variable or determine it from $_SERVER['DOCUMENT_ROOT']
   return '/var/aegir';
 }
 
+/**
+ * Helper function to check if a backup file is available.
+ */
 function _hosting_site_backup_manager_isfileavailable($site, $bid) {
   $result = FALSE;
-  
+
   // @todo: check if the bid is not in a task.
   $source = db_fetch_object(db_query("SELECT filename FROM {hosting_site_backups} WHERE site=%d AND bid=%d ORDER BY timestamp DESC", $site->nid, $bid));
-  
+
   if ($source) {
     // Determine client name.
     $client = hosting_client_node_load($site->client);
-  
+
     // Get Document Root.
     $docroot = _hosting_site_backup_manager_getaegirroot();
-  
-  
-    $file = $docroot .'/backup-exports/'. $client->uname .'/'. basename($source->filename);
-    
-    if(file_exists($file)) {
+
+
+    $file = $docroot . '/backup-exports/' . $client->uname . '/' . basename($source->filename);
+
+    if (file_exists($file)) {
       return TRUE;
     }
   }
-  
+
   return $result;
 }
