@@ -489,3 +489,53 @@ function _hosting_site_backup_manager_isfileavailable($site, $bid) {
 
   return $result;
 }
+
+/**
+ * Remove backup links if they persist beyond a timeout.
+ * They should normally be cleared directly after download.
+ *
+ * Implementation of hook_cron().
+ */
+function hosting_site_backup_manager_cron() {
+  // Get Document Root.
+  $docroot = _hosting_site_backup_manager_getaegirroot();
+  $backup_export_expire_timeout = 60 * 10; // 10 minutes
+  $backup_root = $file = $docroot . '/backup-exports/';
+  if (!is_dir($backup_root)) {
+    return;
+  }
+  //watchdog('hosting_site_backup_manager', "Checking for leftover backup exports: @pathname ", array('@pathname' => $backup_root));
+  try {
+    // Loop the client names that have a dir under the backup root.
+    $iterator = new DirectoryIterator($backup_root);
+    foreach ($iterator as $path) {
+      if ($path->isDot() || !$path->isDir()) {
+        continue;
+      }
+
+      // Loop all files in the client's backup dir.
+      $iterator2 = new DirectoryIterator($path->getPathname());
+      foreach ($iterator2 as $path2) {
+        if ($path2->isDot() || !$path2->isFile()) {
+          continue;
+        }
+
+        // Get the inode Change time, not to be confused with the modified time.
+        // When the inode changed, not the content. e.g. when the extra hardlink was added to the inode.
+        if ($path2->getCTime() < (time() - $backup_export_expire_timeout)) {
+          echo "wanna unlink: " . $path2->getPathname();
+          watchdog('hosting_site_backup_manager', "Unlinking leftover exported backup: @pathname ", array('@pathname' => $path2->getPathname()));
+          unlink($path2->getPathname());
+        }
+
+        //Were now using hardlinks, but incase we ever want to switch:
+        //For symlinks, $path2->getCTime() returns that of the link target not the link itself.
+        //$link_stats = lstat($path2->getPathname());
+        //if ($link_stats['mtime'] < (time() - $backup_export_expire_timeout)) {
+      }
+    }
+  } catch (UnexpectedValueException $e) {
+    // TODO: convert to watchdog_exception for D7
+    watchdog('hosting_site_backup_manager', nl2br(check_plain($e->getMessage())), NULL, WATCHDOG_WARNING);
+  }
+}
