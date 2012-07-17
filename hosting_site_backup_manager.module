@@ -313,7 +313,7 @@ function hosting_site_backup_manager_download($site, $bid) {
 
     $symlink = $docroot .'/backup-exports/'. $client->uname .'/'. basename($source->filename);
 
-    if ($fd = fopen($symlink, 'rb')) {
+    if ($fd = @fopen($symlink, 'rb')) {
 
       // Construct filename.
       $filename = basename($source->filename);
