@@ -74,7 +74,10 @@ function drush_hosting_site_backup_manager_provision_export_backup($backup) {
     // The command failed.
     return drush_set_error('DRUSH_PROVISION_EXPORT_BACKUP_FAILED',
       dt("Drush was unable to export the backup.\nThe specific errors are below:\n!errors",
-      array('!path' => $clientbackupdir, '!errors' => implode("\n", drush_shell_exec_output())))
+      array(
+        '!path' => $clientbackupdir,
+        '!errors' => implode("\n", drush_shell_exec_output()))
+      )
     );
   }
 
@@ -99,7 +102,10 @@ function drush_hosting_site_backup_manager_provision_remove_export_backup($expor
     // The command failed.
     return drush_set_error('DRUSH_PROVISION_REMOVE_EXPORT_BACKUP_FAILED',
       dt("Drush was unable to remove the export of the backup.\nThe specific errors are below:\n!errors",
-      array('!path' => $clientbackupdir, '!errors' => implode("\n", drush_shell_exec_output())))
+      array(
+        '!path' => $clientbackupdir,
+        '!errors' => implode("\n", drush_shell_exec_output()))
+      )
     );
   }
 }

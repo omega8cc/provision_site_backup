@@ -1,5 +1,5 @@
 hostingSiteBackupManagerRefreshList = function() {
-  if (!Drupal.settings.hostingSiteBackupManager.nid) { 
+  if (!Drupal.settings.hostingSiteBackupManager.nid) {
     return null;
   }
 
@@ -7,9 +7,9 @@ hostingSiteBackupManagerRefreshList = function() {
       $("#hosting-site-backup-manager-backupstable").html(data.markup);
       setTimeout("hostingSiteBackupManagerRefreshList()", 30000);
   }
-  
+
   hostingTaskAddOverlay('#hosting-site-backup-manager-backupstable');
-  $.get('/node/' + Drupal.settings.hostingSiteBackupManager.nid + '/ajax/backups', null, hostingSiteBackupManagerCallback , 'json' );
+  $.get('/node/' + Drupal.settings.hostingSiteBackupManager.nid + '/ajax/backups', null, hostingSiteBackupManagerCallback , 'json');
 }
 
 $(document).ready(function() {

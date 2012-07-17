@@ -494,7 +494,7 @@ function _hosting_site_backup_manager_isfileavailable($site, $bid) {
  * Remove backup links if they persist beyond a timeout.
  * They should normally be cleared directly after download.
  *
- * Implementation of hook_cron().
+ * Implements hook_cron().
  */
 function hosting_site_backup_manager_cron() {
   // Get Document Root.
