@@ -311,6 +311,7 @@ function hosting_site_backup_manager_download($site, $bid) {
     // Get Document Root.
     $docroot = _hosting_site_backup_manager_getaegirroot();
 
+    $symlink = $docroot .'/backup-exports/'. $client->uname .'/'. basename($source->filename);
 
     if ($fd = fopen($symlink, 'rb')) {
 
