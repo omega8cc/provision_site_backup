@@ -311,7 +311,7 @@ function hosting_site_backup_manager_download($site, $bid) {
     // Get Document Root.
     $docroot = _hosting_site_backup_manager_getaegirroot();
 
-    $symlink = $docroot .'/backup-exports/'. $client->uname .'/'. basename($source->filename);
+    $symlink = $docroot .'/backup-exports/'. $client->uname . '/' . basename($source->filename);
 
     if ($fd = @fopen($symlink, 'rb')) {
 
@@ -492,6 +492,7 @@ function _hosting_site_backup_manager_isfileavailable($site, $bid) {
 
 /**
  * Remove backup links if they persist beyond a timeout.
+ *
  * They should normally be cleared directly after download.
  *
  * Implements hook_cron().
@@ -499,7 +500,7 @@ function _hosting_site_backup_manager_isfileavailable($site, $bid) {
 function hosting_site_backup_manager_cron() {
   // Get Document Root.
   $docroot = _hosting_site_backup_manager_getaegirroot();
-  $backup_export_expire_timeout = 60 * 10; // 10 minutes
+  $backup_export_expire_timeout = 60 * 10; // 10 minutes.
   $backup_root = $file = $docroot . '/backup-exports/';
   if (!is_dir($backup_root)) {
     return;
@@ -524,18 +525,23 @@ function hosting_site_backup_manager_cron() {
         // When the inode changed, not the content. e.g. when the extra hardlink was added to the inode.
         if ($path2->getCTime() < (time() - $backup_export_expire_timeout)) {
           echo "wanna unlink: " . $path2->getPathname();
-          watchdog('hosting_site_backup_manager', "Unlinking leftover exported backup: @pathname ", array('@pathname' => $path2->getPathname()));
+          watchdog('hosting_site_backup_manager',
+                  "Unlinking leftover exported backup: @pathname ",
+                  array('@pathname' => $path2->getPathname()));
           unlink($path2->getPathname());
         }
 
-        //Were now using hardlinks, but incase we ever want to switch:
-        //For symlinks, $path2->getCTime() returns that of the link target not the link itself.
-        //$link_stats = lstat($path2->getPathname());
-        //if ($link_stats['mtime'] < (time() - $backup_export_expire_timeout)) {
+        // Were now using hardlinks, but incase we ever want to switch:
+        // For symlinks, $path2->getCTime() returns that of the link target not the link itself.
+        // $link_stats = lstat($path2->getPathname());
+        // if ($link_stats['mtime'] < (time() - $backup_export_expire_timeout)) {
       }
     }
   } catch (UnexpectedValueException $e) {
     // TODO: convert to watchdog_exception for D7
-    watchdog('hosting_site_backup_manager', nl2br(check_plain($e->getMessage())), NULL, WATCHDOG_WARNING);
+    watchdog('hosting_site_backup_manager',
+            nl2br(check_plain($e->getMessage())),
+            NULL,
+            WATCHDOG_WARNING);
   }
 }
