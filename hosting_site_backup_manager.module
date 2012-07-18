@@ -311,7 +311,7 @@ function hosting_site_backup_manager_download($site, $bid) {
     // Get Document Root.
     $docroot = _hosting_site_backup_manager_getaegirroot();
 
-    $symlink = $docroot .'/backup-exports/'. $client->uname . '/' . basename($source->filename);
+    $symlink = $docroot . '/backup-exports/' . $client->uname . '/' . basename($source->filename);
 
     if ($fd = @fopen($symlink, 'rb')) {
 
@@ -500,12 +500,12 @@ function _hosting_site_backup_manager_isfileavailable($site, $bid) {
 function hosting_site_backup_manager_cron() {
   // Get Document Root.
   $docroot = _hosting_site_backup_manager_getaegirroot();
-  $backup_export_expire_timeout = 60 * 10; // 10 minutes.
+  $backup_export_expire_timeout = 60 * 10;
   $backup_root = $file = $docroot . '/backup-exports/';
   if (!is_dir($backup_root)) {
     return;
   }
-  //watchdog('hosting_site_backup_manager', "Checking for leftover backup exports: @pathname ", array('@pathname' => $backup_root));
+
   try {
     // Loop the client names that have a dir under the backup root.
     $iterator = new DirectoryIterator($backup_root);
