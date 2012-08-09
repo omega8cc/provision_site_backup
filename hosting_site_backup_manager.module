@@ -383,6 +383,8 @@ function hosting_site_backup_manager_ajax_list($site) {
  * Prepare a table of available backups.
  */
 function hosting_site_backup_manager_backups_table($site) {
+  global $user;
+
   // Determine client name.
   $client = hosting_client_node_load($site->client);
 
@@ -397,6 +399,18 @@ function hosting_site_backup_manager_backups_table($site) {
 
   // TODO Make the table reload automatically.
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
+
+  if (db_affected_rows($result) == 0) {
+    $output = t("No backups available.");
+    $options = array(
+      'query' => array('token' => drupal_get_token($user->uid)),
+      'attributes' => array('class' => 'hosting-button-dialog'),
+    );
+
+    $output .= '&nbsp;' . l(t('Create backup'), 'node/' . $site->nid . '/site_backup', $options);
+    return $output;
+  }
+
   while ($object = db_fetch_object($result)) {
     $row = array();
     $row['description'] = filter_xss($object->description) . "<br />" . format_size($object->size) . " - " . format_date($object->timestamp, 'short');
