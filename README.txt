@@ -10,6 +10,7 @@ INSTALL
 
 The file hosting_site_backup_manager.drush.inc should be copied to the drush installation.
 As it has code for both hostmaster and drush this project needs to be in both a modules directory of hostmaster and a directory where drush looks e.g. ~/.drush/.
+The easiest way is to create a symlink in ~/.drush/ to e.g. /var/aegir/clients/admin/hostmaster.example.com/modules/hosting_site_backup_manager/.
 
 
 
