@@ -16,6 +16,15 @@
 function hosting_site_backup_manager_menu() {
   $items = array();
 
+  $items['admin/hosting/backup_manager'] = array(
+    'title' => 'Backup manager settings',
+    'description' => 'Configure backup manager',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hosting_site_backup_manager_settings'),
+    'access arguments' => array('administer hosting site backup manager'),
+    'type' => MENU_LOCAL_TASK
+  );
+
   $items['node/%hosting_site_node/backups'] = array(
     'title' => 'Backups',
     'description' => 'List of backups of this website',
@@ -78,6 +87,13 @@ function hosting_site_backup_manager_menu() {
 
 
   return $items;
+}
+
+/**
+ * Implementation of hook_perm
+ */
+function hosting_site_backup_manager_perm() {
+  return array('administer hosting site backup manager');
 }
 
 /**
@@ -558,4 +574,274 @@ function hosting_site_backup_manager_cron() {
             NULL,
             WATCHDOG_WARNING);
   }
+}
+
+
+/**
+ * Configuration form for backup schedules
+ */
+function hosting_site_backup_manager_settings() {
+  $form['hosting_backup_gc_default_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable backup garbage collection'),
+    '#description' => t('Set the options below before enabling the garbage collection of old backups.'),
+    '#default_value' => variable_get('hosting_backup_gc_default_enabled', FALSE),
+  );
+
+  $intervals = array(
+    '' => t('n/a'),
+    strtotime('1 hour', 0) => t('Hours'),
+    strtotime('1 day', 0) => t('Days'),
+    strtotime('1 week', 0) => t('Weeks'),
+    strtotime('1 year', 0) => t('Years'),
+  );
+
+  $default_intervals = variable_get('hosting_backup_gc_intervals', array());
+  ksort($default_intervals);
+
+  // Add the empty row:
+  $default_intervals[] = array(
+    'older_than' => array(
+      'number' => 1,
+      'interval' => '',
+    ),
+    'keep_per' => array(
+      'number' => 1,
+      'interval' => '',
+    ),
+
+  );
+
+  $form['hosting_backup_gc_intervals'] = array(
+    '#tree' => TRUE,
+    '#theme' => 'hosting_backup_gc_intervals_table',
+    '#element_validate' => array('hosting_backup_gc_intervals_element_validate'),
+  );
+
+  $i = 0;
+
+  foreach ($default_intervals as $interval) {
+
+    $form['hosting_backup_gc_intervals'][$i]['older_than']['number'] = array(
+      '#type' => 'select',
+      '#options' => drupal_map_assoc(range(1, 365)),
+      '#default_value' => isset($interval['older_than']['number']) ? $interval['older_than']['number'] : 1,
+    );
+
+    $form['hosting_backup_gc_intervals'][$i]['older_than']['interval'] = array(
+      '#type' => 'select',
+      '#options' => $intervals,
+      '#default_value' => isset($interval['older_than']['interval']) ? $interval['older_than']['interval'] : '',
+    );
+
+    $form['hosting_backup_gc_intervals'][$i]['keep_per']['number'] = array(
+      '#type' => 'select',
+      '#options' => drupal_map_assoc(range(1, 365)),
+      '#default_value' => isset($interval['keep_per']['number']) ? $interval['keep_per']['number'] : 1,
+    );
+
+    $form['hosting_backup_gc_intervals'][$i]['keep_per']['interval'] = array(
+      '#type' => 'select',
+      '#options' => $intervals,
+      '#default_value' => isset($interval['keep_per']['interval']) ? $interval['keep_per']['interval'] : '',
+    );
+
+    $i++;
+  }
+
+  return system_settings_form($form);
+}
+
+function hosting_backup_gc_intervals_element_validate($element, &$form_state) {
+  $values = $form_state['values'][$element['#parents'][0]];
+
+  // Build an array of the non-empty ones.
+  $new_values = array();
+  foreach ($values as $val) {
+    if (!empty($val['older_than']['interval']) && !empty($val['keep_per']['interval'])) {
+      // Compute the key
+      $key = $val['older_than']['number'] * $val['older_than']['interval'];
+      $new_values[$key] = $val;
+    }
+  }
+  // Sort the new values.
+  asort($new_values);
+  // Set the new values.
+  form_set_value($element, $new_values, $form_state);
+}
+
+/**
+ * Implementation of hook_hosting_queues
+ *
+ * Return a list of queues that this module needs to manage.
+ */
+function hosting_site_backup_manager_hosting_queues() {
+  $queue['backup_gc'] = array(
+    'name' => t('Backup GC'),
+    'description' => t('Process the garbage collection of backups.'),
+    'type' => 'batch',  # run queue sequentially. always with the same parameters.
+    'frequency' => strtotime("1 hour", 0),
+    'min_threads' => 6,
+    'max_threads' => 12,
+    'threshold' => 100,
+    'total_items' => hosting_site_count(),
+    'singular' => t('site'),
+    'plural' => t('sites'),
+  );
+  return $queue;
+}
+
+
+/**
+ * The main queue callback for the backup garbage collection.
+ */
+function hosting_backup_gc_queue($count) {
+  // Early exit if we are disabled.
+  if (!variable_get('hosting_backup_gc_default_enabled', FALSE)) {
+    return;
+  }
+
+  // Get the settings:
+  $intervals = variable_get('hosting_backup_gc_intervals', array());
+  ksort($intervals);
+  // Early exit if we've no work to do.
+  if (empty($intervals)) {
+    return;
+  }
+
+  // Otherwise loop over all the hosted sites.
+  $sites = hosting_backup_gc_get_sites($count);
+
+  foreach ($sites as $site) {
+    // Get a list of backups.
+    $backups = hosting_backup_gc_backup_list($site->nid);
+
+    $backups_to_remove = hosting_backuo_gc_compute_backups_to_remove($intervals, $backups);
+
+    // Add the backup delete task for the backups to remove
+    if (!empty($backups_to_remove)) {
+      hosting_add_task($site->nid, 'backup_delete', $backups_to_remove);
+    }
+
+    hosting_backup_gc_site_touch($site->nid);
+  }
+
+}
+
+/**
+ * Get sites that need to be checked for backup GC.
+ */
+function hosting_backup_gc_get_sites($limit = 5) {
+  $sites = array();
+  $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {hosting_site} s ON n.nid = s.nid LEFT JOIN {hosting_backup_gc_sites} gc ON n.nid = gc.site_id WHERE n.type='site' and s.status = %d ORDER BY gc.last_gc ASC, n.nid ASC limit %d", HOSTING_SITE_ENABLED, $limit);
+  while ($nid = db_fetch_object($result)) {
+    $sites[$nid->nid] = node_load($nid->nid);
+  }
+  return $sites;
+}
+
+/**
+ * Retrieve a list of backup generated for a site.
+ *
+ * @param site
+ *   The node if of the site backups are being retrieved for
+ * @return
+ *   An associative array of backups existing for the site, indexed by bid and sorted reverse chronologically.
+ */
+function hosting_backup_gc_backup_list($site) {
+  $result = db_query("SELECT bid, filename, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site);
+  while ($object = db_fetch_object($result)) {
+    $backups[$object->bid] = $object;
+  }
+  return $backups;
+}
+
+/**
+ * Compute which backups to remove.
+ */
+function hosting_backuo_gc_compute_backups_to_remove($intervals, $backups) {
+  $to_remove = array();
+
+  foreach ($intervals as $interval) {
+    // Find the backups that are older than specified in the interval
+    $backups_to_consider = array();
+    // The $pockets array will store keep a record of which backups we have,
+    // two backups in a pocket means that the older one will have to go...
+    $pockets = array();
+    foreach ($backups as $backup) {
+      if ($backup->timestamp < (time() - $interval['older_than']['number'] * $interval['older_than']['interval'])) {
+        $backups_to_consider[] = $backup;
+      }
+    }
+    foreach ($backups_to_consider as $backup) {
+      // Now compute which backups we should be removing.
+      $pocket = floor((time() - $backup->timestamp) / ($interval['keep_per']['number'] * $interval['keep_per']['interval']));
+      // If there is not a backup in this pocket, mark it, otherwise add it to the list to delete.
+      if (empty($pockets[$pocket])) {
+        $pockets[$pocket] = TRUE;
+      }
+      else {
+        $to_remove[$backup->bid] = $backup->filename;
+      }
+    }
+  }
+
+  return $to_remove;
+}
+
+/**
+ * Mark a site as having its backups garbage collected.
+ */
+function hosting_backup_gc_site_touch($site_id, $timestamp = NULL) {
+  if (is_null($timestamp)) {
+    $timestamp = time();
+  }
+  $record = array('site_id' => $site_id, 'last_gc' => $timestamp);
+  if (db_result(db_query('SELECT count(*) FROM {hosting_backup_gc_sites} WHERE site_id = %d', $record['site_id']))) {
+    // Update
+    drupal_write_record('hosting_backup_gc_sites', $record, 'site_id');
+  }
+  else {
+    // Insert
+    drupal_write_record('hosting_backup_gc_sites', $record);
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function hosting_site_backup_manager_theme() {
+  $handlers = array();
+
+  $handlers['hosting_backup_gc_intervals_table'] = array(
+    'arguments' => array(
+      'form' => array(),
+    ),
+  );
+
+  return $handlers;
+}
+
+/**
+ * Theme implementation of our form element of intervals.
+ */
+function theme_hosting_backup_gc_intervals_table($form) {
+  $output = '';
+
+  $rows = array();
+
+  foreach (element_children($form) as $i) {
+    $row = array();
+    $row[] = t('For backups older than');
+    $row[] = drupal_render($form[$i]['older_than']);
+    $row[] = t('Keep 1 backup per');
+    $row[] = drupal_render($form[$i]['keep_per']);
+
+    $rows[] = $row;
+  }
+
+  $output .= theme('table', NULL, $rows);
+
+  $output .= drupal_render($form);
+  return $output;
 }
