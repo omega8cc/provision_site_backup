@@ -9,7 +9,7 @@ hostingSiteBackupManagerRefreshList = function() {
   }
 
   hostingTaskAddOverlay('#hosting-site-backup-manager-backupstable');
-  $.get('/node/' + Drupal.settings.hostingSiteBackupManager.nid + '/ajax/backups', null, hostingSiteBackupManagerCallback , 'json');
+  $.get(Drupal.settings.basePath + 'node/' + Drupal.settings.hostingSiteBackupManager.nid + '/ajax/backups', null, hostingSiteBackupManagerCallback , 'json');
 }
 
 $(document).ready(function() {
