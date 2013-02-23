@@ -597,7 +597,7 @@ function hosting_site_backup_manager_settings() {
   $intervals = array(
     '' => t('n/a'),
     strtotime('1 hour', 0) => t('Hours'),
-    strtotime('1 day', 0) => t('Days'),
+    strtotime('1 day',  0) => t('Days'),
     strtotime('1 week', 0) => t('Weeks'),
     strtotime('1 year', 0) => t('Years'),
   );
