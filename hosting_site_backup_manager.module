@@ -429,6 +429,11 @@ function hosting_site_backup_manager_backups_table($site) {
     return $output;
   }
 
+  if (!empty($ishostmaster)) {
+    $output = t("Feature not available for the Hostmaster site.");
+    return $output;
+  }
+
   while ($object = db_fetch_object($result)) {
     $row = array();
     $row['description'] = filter_xss($object->description) . "<br />" . format_size($object->size) . " - " . format_date($object->timestamp, 'short');
