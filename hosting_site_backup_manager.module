@@ -304,6 +304,13 @@ function hosting_site_backup_manager_export($site, $bid) {
   drupal_goto('node/' . $site->nid . '/backups');
 }
 
+/**
+ * Helper function to get the Aegir root directory.
+ */
+function _hosting_site_backup_manager_getaegirroot() {
+  $aegirroot = variable_get('hosting_site_backup_manager_base_path', '/var/aegir');
+  return $aegirroot;
+}
 
 /**
  * Function to download a backup file.
@@ -486,14 +493,6 @@ function hosting_site_backup_manager_hosting_tasks() {
 }
 
 /**
- * Helper function to get the Aegir root directory.
- */
-function _hosting_site_backup_manager_getaegirroot() {
-  // TODO: Make it a variable or determine it from $_SERVER['DOCUMENT_ROOT']
-  return '/var/aegir';
-}
-
-/**
  * Helper function to check if a backup file is available.
  */
 function _hosting_site_backup_manager_isfileavailable($site, $bid) {
@@ -581,6 +580,13 @@ function hosting_site_backup_manager_cron() {
  * Configuration form for backup schedules
  */
 function hosting_site_backup_manager_settings() {
+  $form['hosting_site_backup_manager_base_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Aegir root directory'),
+    '#description' => t('The root directory of your Aegir instance, i.e. /var/aegir - no trailing slash!'),
+    '#default_value' => variable_get('hosting_site_backup_manager_base_path', '/var/aegir'),
+  );
+
   $form['hosting_backup_gc_default_enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable backup garbage collection'),
