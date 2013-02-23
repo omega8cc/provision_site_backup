@@ -195,7 +195,7 @@ function hosting_site_backup_manager_confirm_delete_submit($form, &$form_state) 
   $bid = $form['#bid'];
 
   // Add the hosting task.
-  hosting_add_task($sitenid, 'backup_delete', array($bid => $filename));
+  hosting_add_task($sitenid, 'backup-delete', array($bid => $filename));
 
   $form_state['redirect'] = 'node/' . $sitenid . '/backup';
   modalframe_close_dialog();
@@ -411,7 +411,7 @@ function hosting_site_backup_manager_backups_table($site) {
 
   // Only allow actions when there's no backup delete or
   // restore task running for this node.
-  $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup_delete') || hosting_task_outstanding($site->nid, 'restore') || hosting_task_outstanding($site->nid, 'export_backup') || hosting_task_outstanding($site->nid, 'remove_export_backup'));
+  $buttonstatus = !(hosting_task_outstanding($site->nid, 'backup-delete') || hosting_task_outstanding($site->nid, 'restore') || hosting_task_outstanding($site->nid, 'export_backup') || hosting_task_outstanding($site->nid, 'remove_export_backup'));
 
   // TODO Make the table reload automatically.
   $result = db_query("SELECT bid, description, filename, size, timestamp FROM {hosting_site_backups} WHERE site=%d ORDER BY timestamp DESC", $site->nid);
@@ -720,7 +720,7 @@ function hosting_backup_gc_queue($count) {
 
     // Add the backup delete task for the backups to remove
     if (!empty($backups_to_remove)) {
-      hosting_add_task($site->nid, 'backup_delete', $backups_to_remove);
+      hosting_add_task($site->nid, 'backup-delete', $backups_to_remove);
     }
 
     hosting_backup_gc_site_touch($site->nid);
