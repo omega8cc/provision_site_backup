@@ -404,7 +404,7 @@ function hosting_site_backup_manager_backups_table($site) {
 
   // Determine site's profile name
   $profile = node_load($site->profile);
-  $ishostmaster = ($profile->title == "Hostmaster");
+  $ishostmaster = ($profile->short_name == 'hostmaster');
 
   $headers[] = t('Backup');
   $headers[] = array('data' => t('Actions'), 'class' => 'hosting-actions');
