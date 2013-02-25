@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /**
  * @file
@@ -11,7 +11,7 @@
 /**
  * Implements hook_drush_command().
  */
-function hosting_site_backup_manager_drush_command() {
+function provision_site_backup_manager_drush_command() {
   $items['provision-export_backup'] = array(
     'description' => 'Make a site backup available for download.',
     'bootstrap' => DRUSH_BOOTSTRAP_DRUSH,
@@ -34,7 +34,7 @@ function hosting_site_backup_manager_drush_command() {
 /**
  * Map values of site node into command line arguments.
  */
-function drush_hosting_site_backup_manager_pre_hosting_task($task) {
+function drush_provision_site_backup_manager_pre_hosting_task($task) {
   $task =& drush_get_context('HOSTING_TASK');
 
   // Pass the dialog entries to the drush provision script.
@@ -52,7 +52,7 @@ function drush_hosting_site_backup_manager_pre_hosting_task($task) {
 /**
  * Implements drush_hook_COMMAND().
  */
-function drush_hosting_site_backup_manager_provision_export_backup($backup) {
+function drush_provision_site_backup_manager_provision_export_backup($backup) {
   drush_log(dt('Start export backup command'), 'ok');
 
   // Path for exported backups.
@@ -86,7 +86,7 @@ function drush_hosting_site_backup_manager_provision_export_backup($backup) {
 /**
  * Implements the provision-remove_export_backup command.
  */
-function drush_hosting_site_backup_manager_provision_remove_export_backup($export) {
+function drush_provision_site_backup_manager_provision_remove_export_backup($export) {
   drush_log(dt('Start remove export backup command'), 'ok');
 
   // Path for exported backups.
